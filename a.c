@@ -5,6 +5,13 @@
 static char* file_name = "/Users/mayudong/Movies/1.mp4";
 static FILE* pFile = NULL;
 
+#define read_8() read8(pFile)
+#define read_16() read16(pFile)
+#define read_24() read24(pFile)
+#define read_32() read32(pFile)
+#define read_64() read64(pFile)
+#define skip_n(x) skip(pFile,x)
+
 static int read_box(uint32_t start_pos);
 
 typedef struct MOVParseTableEntry
@@ -56,6 +63,7 @@ static int parse_mvhd(uint32_t start_pos, uint32_t mov_size)
 	// printf("version = %d\n", version);
 	// uint32_t flags = read24(pFile);
 	// printf("flags = %d\n", flags);
+
 	// uint32_t creation_time = read32(pFile);
 	// printf("creation_time = %d\n", creation_time);
 	// uint32_t modification_time = read32(pFile);
@@ -74,6 +82,93 @@ static int parse_mvhd(uint32_t start_pos, uint32_t mov_size)
 	return 0;
 }
 
+static int parse_tkhd(uint32_t start_pos, uint32_t size)
+{
+	// int version = read_8();
+	// printf("version = %d\n", version);
+	// int flags = read_24();
+	// printf("flags = %d\n", flags);
+
+	// uint32_t creation_time = read32(pFile);
+	// printf("creation_time = %d\n", creation_time);
+	// uint32_t modification_time = read32(pFile);
+	// printf("modification_time = %d\n", modification_time);
+	// int track_id = read_32();
+	// printf("track_id = %d\n", track_id);
+
+	// skip(pFile, 8);
+
+	// int layer = read_16();
+	// printf("layer = %d\n", layer);
+	// int alternate_group = read_16();
+	// printf("alternate_group = %d\n", alternate_group);
+	// int volume = read_16();
+	// printf("volume = 0x%x\n", volume);
+
+	// skip(pFile, 2);
+	// skip(pFile, 36);//matrix
+
+	// int width = read_32();
+	// printf("width = 0x%x\n", width);
+	// int height = read_32();
+	// printf("hight = 0x%x\n", height);
+
+	return 0;
+}
+
+static int parse_elst(uint32_t start_pos, uint32_t size)
+{
+	// int version = read_8();
+	// printf("version = %d\n", version);
+	// int flags = read_24();
+	// printf("flags = %d\n", flags);
+
+	// int entry_count = read_32();
+	// printf("entry_count = %d\n", entry_count);
+	// for(int i=0;i<entry_count;i++)
+	// {
+	// 	if(version == 1)
+	// 	{
+	// 		uint64_t segment_duration = read_64();
+	// 		printf("%d:segment_duration = %lld\n", i, segment_duration);
+	// 		uint64_t media_time = read_64();
+	// 		printf("%d:media_time = %lld\n", i, media_time);
+	// 	}
+	// 	else
+	// 	{
+	// 		uint32_t segment_duration = read_32();
+	// 		printf("%d:segment_duration = %d", i, segment_duration);
+	// 		int media_time = read_32();
+	// 		printf("%d:media_time = %d\n", i, media_time);
+	// 	}
+	// 	int media_rate_interge = read_16();
+	// 	int media_rate_fraction = read_16();
+	// 	printf("media_rate = %d.%d\n", media_rate_interge, media_rate_fraction);
+	// }
+
+	return 0;
+}
+
+static int parse_mdhd(uint32_t start_pos, uint32_t size)
+{
+	// int version = read_8();
+	// printf("version = %d\n", version);
+	// uint32_t flags = read_24();
+	// printf("flags = %d\n", flags);
+
+	// uint32_t creation_time = read_32();
+	// printf("creation_time = %d\n", creation_time);
+	// uint32_t modification_time = read_32();
+	// printf("modification_time = %d\n", modification_time);
+	// uint32_t time_scale = read_32();
+	// printf("time_scale = %d\n", time_scale);
+	// uint32_t duration = read_32();
+	// printf("duration = %d\n", duration);
+
+	// int language = read_16();
+	// printf("language = %x\n", language);//todo
+	return 0;
+}
 
 
 static const MOVParseTableEntry mov_default_parse_table[] = {
@@ -82,7 +177,11 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('m','o','o','f'), default_parse},
 	{MKTAG('m','v','h','d'), parse_mvhd},
 	{MKTAG('t','r','a','k'), default_parse},
+	{MKTAG('t','k','h','d'), parse_tkhd},
+	{MKTAG('e','d','t','s'), default_parse},
+	{MKTAG('e','l','s','t'), parse_elst},
 	{MKTAG('m','d','i','a'), default_parse},
+	{MKTAG('m','d','h','d'), parse_mdhd},
 	{MKTAG('m','i','n','f'), default_parse},
 	{MKTAG('d','i','n','f'), default_parse},
 	{MKTAG('s','t','b','l'), default_parse},
