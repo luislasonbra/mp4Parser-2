@@ -196,6 +196,23 @@ static int parse_hdlr(uint32_t start_pos, uint32_t size)
 	return 0;
 }
 
+static int parse_dref(uint32_t start_pos, uint32_t size)
+{
+	int version = read_8();
+	uint32_t flags = read_24();
+	
+	uint32_t entry_count = read_32();
+	int index = 8;
+	for(int i=0;i<entry_count;i++)
+	{
+		int size = read_box(start_pos+index);
+		index += size;
+		fseek(pFile, start_pos+index, SEEK_SET);
+
+	}
+	return 0;
+}
+
 static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('f','t','y','p'), parse_ftyp},
 	{MKTAG('m','o','o','v'), default_parse},
@@ -210,6 +227,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('h','d','l','r'), parse_hdlr},
 	{MKTAG('m','i','n','f'), default_parse},
 	{MKTAG('d','i','n','f'), default_parse},
+	{MKTAG('d','r','e','f'), parse_dref},
 	{MKTAG('s','t','b','l'), default_parse},
 	{MKTAG('m','v','e','x'), default_parse},
 	{MKTAG('u','d','t','a'), default_parse},
