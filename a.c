@@ -1,9 +1,17 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "utils.h"
+#include "box_define.h"
 
 static char* file_name = "/Users/mayudong/Movies/1.mp4";
 static FILE* pFile = NULL;
+
+
+typedef struct Mp4File
+{
+	BaseBox* cur_box;
+	BaseBox* boxes;
+}Mp4File;
 
 #define read_8() read8(pFile)
 #define read_16() read16(pFile)
@@ -285,6 +293,8 @@ static int read_box(uint32_t start_pos)
 
 int main()
 {
+	Mp4File* mp4File = (Mp4File*)mallocz(sizeof(Mp4File));
+
 	uint32_t cur_pos = 0;
 	pFile = fopen(file_name, "rb");
 	if(pFile == NULL)
@@ -306,5 +316,7 @@ int main()
 
 	fclose(pFile);
 	pFile = NULL;
+
+	free(mp4File);
 	return 0;
 }

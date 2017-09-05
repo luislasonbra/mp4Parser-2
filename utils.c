@@ -68,3 +68,12 @@ void print_fourcc(uint32_t fourcc)
 	buffer[4] = 0;
 	printf("fourcc = %s\n", buffer);
 }
+
+
+void *mallocz(size_t size)
+{
+    void *ptr = malloc(size);
+    if (ptr)
+        memset(ptr, 0, size);
+    return ptr;
+}

@@ -21,4 +21,7 @@ int skip(FILE* fd, int len);
 void print_box_type(uint32_t type);
 void print_fourcc(uint32_t fourcc);
 
+
+void *mallocz(size_t size);
+
 #endif
