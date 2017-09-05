@@ -11,6 +11,7 @@ static FILE* pFile = NULL;
 #define read_32() read32(pFile)
 #define read_64() read64(pFile)
 #define skip_n(x) skip(pFile,x)
+#define read_n(buf, x) readn(pFile, buf, x)
 
 static int read_box(uint32_t start_pos);
 
@@ -170,6 +171,30 @@ static int parse_mdhd(uint32_t start_pos, uint32_t size)
 	return 0;
 }
 
+static int parse_hdlr(uint32_t start_pos, uint32_t size)
+{
+	// int version = read_8();
+	// printf("version = %d\n", version);
+	// uint32_t flags = read_24();
+	// printf("flags = %d\n", flags);
+
+	// uint32_t pre_define = read_32();
+	// uint32_t handle_type = read_32();
+	// print_fourcc(handle_type);
+	// skip_n(12);
+
+	// int name_size = size-20;
+	// if(name_size > 0)
+	// {
+	// 	char* name = (char*)malloc(name_size+1);
+	// 	memset(name, 0, name_size+1);
+	// 	read_n(name, name_size);
+	// 	printf("hdlr name = %s\n", name);
+	// 	free(name);	
+	// }
+	
+	return 0;
+}
 
 static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('f','t','y','p'), parse_ftyp},
@@ -182,6 +207,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('e','l','s','t'), parse_elst},
 	{MKTAG('m','d','i','a'), default_parse},
 	{MKTAG('m','d','h','d'), parse_mdhd},
+	{MKTAG('h','d','l','r'), parse_hdlr},
 	{MKTAG('m','i','n','f'), default_parse},
 	{MKTAG('d','i','n','f'), default_parse},
 	{MKTAG('s','t','b','l'), default_parse},

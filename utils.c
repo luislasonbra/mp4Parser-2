@@ -41,6 +41,11 @@ int skip(FILE* fd, int len)
 	return fseek(fd, len, SEEK_CUR);	
 }
 
+int readn(FILE* fd, char* buf, int size)
+{
+	return fread(buf, 1, size, fd);
+}
+
 
 void print_box_type(uint32_t type)
 {
@@ -51,4 +56,15 @@ void print_box_type(uint32_t type)
 	buffer[3] = type&0xff;
 	buffer[4] = 0;
 	printf("type = %s\n", buffer);
+}
+
+void print_fourcc(uint32_t fourcc)
+{
+	char buffer[5] = {0};
+	buffer[0] = fourcc>>24;
+	buffer[1] = (fourcc>>16)&0xff;
+	buffer[2] = (fourcc>>8)&0xff;
+	buffer[3] = fourcc&0xff;
+	buffer[4] = 0;
+	printf("fourcc = %s\n", buffer);
 }

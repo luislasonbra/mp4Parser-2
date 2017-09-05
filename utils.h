@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <memory.h>
 
 #define MKTAG(a,b,c,d) ((d) | ((c) << 8) | ((b) << 16) | ((unsigned)(a) << 24))
 
@@ -11,10 +13,12 @@ uint16_t read16(FILE* fd);
 uint32_t read24(FILE* fd);
 uint32_t read32(FILE* fd);
 uint64_t read64(FILE* fd);
+int readn(FILE* fd, char* buf, int size);
 
 int skip(FILE* fd, int len);
 
 
 void print_box_type(uint32_t type);
+void print_fourcc(uint32_t fourcc);
 
 #endif
