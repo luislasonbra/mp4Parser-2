@@ -21,28 +21,28 @@ typedef struct Mp4File
 #define skip_n(x) skip(pFile,x)
 #define read_n(buf, x) readn(pFile, buf, x)
 
-static int read_box(uint32_t start_pos);
+static int read_box(Mp4File* mp4File, uint32_t start_pos);
 
 typedef struct MOVParseTableEntry
 {
 	uint32_t type;
-	int (*parser)(uint32_t start_pos, uint32_t size);
+	int (*parser)(Mp4File* mp4File, uint32_t start_pos, uint32_t size);
 }MOVParseTableEntry;
 
 
-static int default_parse(uint32_t start_pos, uint32_t mov_size)
+static int default_parse(Mp4File* mp4File, uint32_t start_pos, uint32_t mov_size)
 {
 	int index = 0;
 	while(index < mov_size)
 	{
-		int size = read_box(start_pos+index);
+		int size = read_box(mp4File, start_pos+index);
 		index += size;
 		fseek(pFile, start_pos+index, SEEK_SET);
 	}
 	return 0;
 }
 
-static int parse_meta(uint32_t start_pos, uint32_t mov_size)
+static int parse_meta(Mp4File* mp4File, uint32_t start_pos, uint32_t mov_size)
 {
 	int index = 0;
 	while(mov_size > 8)
@@ -55,18 +55,29 @@ static int parse_meta(uint32_t start_pos, uint32_t mov_size)
 			fseek(pFile, -8, SEEK_CUR);
 			index -= 8;
 			mov_size += 8;
-			return default_parse(start_pos+index, mov_size);
+			return default_parse(mp4File, start_pos+index, mov_size);
 		}
 	}
 	return 0;
 }
 
-static int parse_ftyp(uint32_t start_pos, uint32_t size)
+static int parse_ftyp(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
+	// uint32_t major_brand = read_32();
+	// print_fourcc(major_brand);
+	// uint32_t minor_version = read_32();
+	// printf("minor_version = %d\n", minor_version);
+	// int compatible_count = (size-8)/4;
+	// for(int i=0;i<compatible_count;i++)
+	// {
+	// 	uint32_t compatible_brand = read_32();
+	// 	print_fourcc(compatible_brand);
+	// }
+
 	return 0;
 }
 
-static int parse_mvhd(uint32_t start_pos, uint32_t mov_size)
+static int parse_mvhd(Mp4File* mp4File, uint32_t start_pos, uint32_t mov_size)
 {
 	// int version = read8(pFile);
 	// printf("version = %d\n", version);
@@ -91,7 +102,7 @@ static int parse_mvhd(uint32_t start_pos, uint32_t mov_size)
 	return 0;
 }
 
-static int parse_tkhd(uint32_t start_pos, uint32_t size)
+static int parse_tkhd(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
 	// int version = read_8();
 	// printf("version = %d\n", version);
@@ -125,7 +136,7 @@ static int parse_tkhd(uint32_t start_pos, uint32_t size)
 	return 0;
 }
 
-static int parse_elst(uint32_t start_pos, uint32_t size)
+static int parse_elst(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
 	// int version = read_8();
 	// printf("version = %d\n", version);
@@ -158,7 +169,7 @@ static int parse_elst(uint32_t start_pos, uint32_t size)
 	return 0;
 }
 
-static int parse_mdhd(uint32_t start_pos, uint32_t size)
+static int parse_mdhd(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
 	// int version = read_8();
 	// printf("version = %d\n", version);
@@ -179,7 +190,7 @@ static int parse_mdhd(uint32_t start_pos, uint32_t size)
 	return 0;
 }
 
-static int parse_hdlr(uint32_t start_pos, uint32_t size)
+static int parse_hdlr(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
 	// int version = read_8();
 	// printf("version = %d\n", version);
@@ -204,7 +215,7 @@ static int parse_hdlr(uint32_t start_pos, uint32_t size)
 	return 0;
 }
 
-static int parse_dref(uint32_t start_pos, uint32_t size)
+static int parse_dref(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
 	int version = read_8();
 	uint32_t flags = read_24();
@@ -213,7 +224,7 @@ static int parse_dref(uint32_t start_pos, uint32_t size)
 	int index = 8;
 	for(int i=0;i<entry_count;i++)
 	{
-		int size = read_box(start_pos+index);
+		int size = read_box(mp4File, start_pos+index);
 		index += size;
 		fseek(pFile, start_pos+index, SEEK_SET);
 
@@ -221,7 +232,7 @@ static int parse_dref(uint32_t start_pos, uint32_t size)
 	return 0;
 }
 
-static int parse_stsd(uint32_t start_pos, uint32_t size)
+static int parse_stsd(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
 	int version = read_8();
 	uint32_t flags = read_24();
@@ -230,7 +241,7 @@ static int parse_stsd(uint32_t start_pos, uint32_t size)
 	int index = 8;
 	for(int i=0;i<entry_count;i++)
 	{
-		int size = read_box(start_pos+index);
+		int size = read_box(mp4File, start_pos+index);
 		index += size;
 		fseek(pFile, start_pos+index, SEEK_SET);
 
@@ -262,11 +273,25 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 };
 
 
-static int read_box(uint32_t start_pos)
+static int read_box(Mp4File* mp4File, uint32_t start_pos)
 {
 	int b_large_size = 0;
 	uint32_t size = read32(pFile);
 	uint32_t type = read32(pFile);
+	BaseBox* new_box = malloc_box(type);
+	new_box->size = size;
+	new_box->type = type;
+	if(mp4File->cur_box == NULL)
+	{
+		mp4File->boxes = new_box;
+		mp4File->cur_box = mp4File->boxes;
+	}
+	else
+	{
+		mp4File->cur_box->next = new_box;
+		mp4File->cur_box = new_box;
+	}
+
 	print_box_type(type);
 	if(size == 1)
 	{
@@ -274,7 +299,7 @@ static int read_box(uint32_t start_pos)
 		b_large_size = 1;
 	}
 
-	int (*parser)(uint32_t,uint32_t) = NULL;
+	int (*parser)(Mp4File*, uint32_t,uint32_t) = NULL;
 	for(int i=0;mov_default_parse_table[i].type != 0;i++)
 	{
 		if(mov_default_parse_table[i].type == type)
@@ -285,10 +310,21 @@ static int read_box(uint32_t start_pos)
 	}
 	if(parser)
 	{
-		parser(start_pos+8, size-8);
+		parser(mp4File, start_pos+8, size-8);
 	}
 
 	return size;
+}
+
+static void show_mp4_file(Mp4File* mp4File)
+{
+	BaseBox* box = mp4File->boxes;
+	printf("-----------------\n");
+	while(box != NULL)
+	{
+		print_box_type(box->type);
+		box = box->next;
+	}
 }
 
 int main()
@@ -309,13 +345,15 @@ int main()
 	while(cur_pos < file_size)
 	{
 		uint32_t type;
-		int size = read_box(cur_pos);
+		int size = read_box(mp4File, cur_pos);
 		cur_pos += size;
 		fseek(pFile, cur_pos, SEEK_SET);
 	}
 
 	fclose(pFile);
 	pFile = NULL;
+
+	show_mp4_file(mp4File);
 
 	free(mp4File);
 	return 0;

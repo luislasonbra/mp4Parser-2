@@ -1,5 +1,16 @@
-
 #include "utils.h"
+
+typedef struct BoxSizeTable
+{
+	uint32_t type;
+	int size;
+}BoxSizeTable;
+
+static const BoxSizeTable box_size_table[] = 
+{
+	// {MKTAG('f','t','y','p'), sizeof(FileTypeBox)},
+	{0, 0}
+};
 
 uint8_t read8(FILE* fd)
 {
@@ -77,3 +88,23 @@ void *mallocz(size_t size)
         memset(ptr, 0, size);
     return ptr;
 }
+
+BaseBox* malloc_box(uint32_t type)
+{
+	BaseBox* box = NULL;
+	for(int i=0;box_size_table[i].type != 0;i++)
+	{
+		if(box_size_table[i].type == type)
+		{
+			box = mallocz(box_size_table[i].size);
+			return box;
+		}
+	}
+	box = mallocz(sizeof(BaseBox));
+	return box;
+}
+
+
+
+
+

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include "box_define.h"
 
 #define MKTAG(a,b,c,d) ((d) | ((c) << 8) | ((b) << 16) | ((unsigned)(a) << 24))
 
@@ -23,5 +24,6 @@ void print_fourcc(uint32_t fourcc);
 
 
 void *mallocz(size_t size);
+BaseBox* malloc_box(uint32_t type);
 
 #endif
