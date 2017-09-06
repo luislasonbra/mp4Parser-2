@@ -8,6 +8,7 @@ typedef struct BaseBox
 	uint32_t size;
 	uint32_t type;
 	struct BaseBox* next;
+	struct BaseBox* child;
 }BaseBox;
 
 typedef struct FullBox

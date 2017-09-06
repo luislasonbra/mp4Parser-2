@@ -63,16 +63,17 @@ static int parse_meta(Mp4File* mp4File, uint32_t start_pos, uint32_t mov_size)
 
 static int parse_ftyp(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 {
-	// uint32_t major_brand = read_32();
-	// print_fourcc(major_brand);
-	// uint32_t minor_version = read_32();
-	// printf("minor_version = %d\n", minor_version);
-	// int compatible_count = (size-8)/4;
-	// for(int i=0;i<compatible_count;i++)
-	// {
-	// 	uint32_t compatible_brand = read_32();
-	// 	print_fourcc(compatible_brand);
-	// }
+	if(mp4File == NULL || mp4File->cur_box == NULL)
+		return 0;
+
+	FileTypeBox* file_type_box = (FileTypeBox*)mp4File->cur_box;
+	file_type_box->major_brand = read_32();
+	file_type_box->minor_version = read_32();
+	int count = (size-8)/4;
+	for(int i=0;i<count;i++)
+	{
+		file_type_box->compatible_brands[i] = read_32();
+	}
 
 	return 0;
 }
@@ -281,7 +282,8 @@ static int read_box(Mp4File* mp4File, uint32_t start_pos)
 	BaseBox* new_box = malloc_box(type);
 	new_box->size = size;
 	new_box->type = type;
-	if(mp4File->cur_box == NULL)
+
+	if(mp4File->boxes == NULL)
 	{
 		mp4File->boxes = new_box;
 		mp4File->cur_box = mp4File->boxes;
@@ -292,7 +294,6 @@ static int read_box(Mp4File* mp4File, uint32_t start_pos)
 		mp4File->cur_box = new_box;
 	}
 
-	print_box_type(type);
 	if(size == 1)
 	{
 		uint64_t large_size = read64(pFile);
@@ -327,8 +328,13 @@ static void show_mp4_file(Mp4File* mp4File)
 	}
 }
 
-int main()
+int main(int argc, char** argv)
 {
+	if(argc > 1)
+	{
+		file_name = argv[1];
+	}
+
 	Mp4File* mp4File = (Mp4File*)mallocz(sizeof(Mp4File));
 
 	uint32_t cur_pos = 0;

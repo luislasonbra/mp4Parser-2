@@ -8,7 +8,7 @@ typedef struct BoxSizeTable
 
 static const BoxSizeTable box_size_table[] = 
 {
-	// {MKTAG('f','t','y','p'), sizeof(FileTypeBox)},
+	{MKTAG('f','t','y','p'), sizeof(FileTypeBox)},
 	{0, 0}
 };
 
