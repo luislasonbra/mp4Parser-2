@@ -22,6 +22,7 @@ typedef struct Mp4File
 #define read_n(buf, x) readn(pFile, buf, x)
 
 static BaseBox* read_box(uint32_t start_pos);
+static void add_box(BaseBox* root, BaseBox* new_box);
 
 typedef struct MOVParseTableEntry
 {
@@ -36,6 +37,7 @@ static int default_parse(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 	while(index < mov_size)
 	{
 		BaseBox* box = read_box(start_pos+index);
+		add_box(root, box);
 		index += box->size;
 		fseek(pFile, start_pos+index, SEEK_SET);
 	}
@@ -308,7 +310,7 @@ static BaseBox* read_box(uint32_t start_pos)
 
 static void show_mp4_file(Mp4File* mp4File)
 {
-	BaseBox* box = mp4File->root.next;
+	BaseBox* box = mp4File->root.child;
 	printf("-----------------\n");
 	while(box != NULL)
 	{
@@ -317,18 +319,24 @@ static void show_mp4_file(Mp4File* mp4File)
 	}
 }
 
-static BaseBox* add_box(BaseBox* box, BaseBox* new_box)
+static void add_box(BaseBox* root, BaseBox* new_box)
 {
-	if(box == NULL)
-		return NULL;
+	if(root == NULL)
+		return;
 
-	BaseBox* tmp = box;
+	if(root->child == NULL)
+	{
+		root->child = new_box;
+		return;
+	}
+
+	BaseBox* tmp = root->child;
 	while(tmp->next != NULL)
 	{
 		tmp = tmp->next;
 	}
 	tmp->next = new_box;
-	return new_box;
+	return;
 }
 
 int main(int argc, char** argv)
@@ -351,11 +359,11 @@ int main(int argc, char** argv)
 	int file_size = ftell(pFile);
 	fseek(pFile, 0, SEEK_SET);
 
-	BaseBox* tmp_box = &mp4File->root;
+	BaseBox* root_box = &mp4File->root;
 	while(cur_pos < file_size)
 	{
 		BaseBox* box = read_box(cur_pos);
-		tmp_box = add_box(tmp_box, box);
+		add_box(root_box, box);
 		cur_pos += box->size;
 		fseek(pFile, cur_pos, SEEK_SET);
 	}
