@@ -308,14 +308,18 @@ static BaseBox* read_box(uint32_t start_pos)
 	return new_box;
 }
 
-static void show_mp4_file(Mp4File* mp4File)
+static void show_mp4_file(BaseBox* root)
 {
-	BaseBox* box = mp4File->root.child;
-	printf("-----------------\n");
-	while(box != NULL)
+	BaseBox* box = root;
+	print_box_type(box->type);
+	if(box->child != NULL)
 	{
-		print_box_type(box->type);
+		show_mp4_file(box->child);
+	}
+	if(box->next)
+	{
 		box = box->next;
+		show_mp4_file(box);
 	}
 }
 
@@ -371,7 +375,7 @@ int main(int argc, char** argv)
 	fclose(pFile);
 	pFile = NULL;
 
-	show_mp4_file(mp4File);
+	show_mp4_file(&mp4File->root);
 
 	free(mp4File);
 	return 0;
