@@ -44,7 +44,7 @@ static int default_parse(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 	return 0;
 }
 
-static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t size)
+static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	if(root == NULL)
 		return 0;
@@ -52,11 +52,36 @@ static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t size)
 	FileTypeBox* file_type_box = (FileTypeBox*)root;
 	file_type_box->major_brand = read_32();
 	file_type_box->minor_version = read_32();
-	int count = (size-8)/4;
+	int count = (mov_size-8)/4;
 	for(int i=0;i<count;i++)
 	{
 		file_type_box->compatible_brands[i] = read_32();
 	}
+
+	return 0;
+}
+
+static int parse_mvhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	// int version = read8(pFile);
+	// printf("version = %d\n", version);
+	// uint32_t flags = read24(pFile);
+	// printf("flags = %d\n", flags);
+
+	// uint32_t creation_time = read32(pFile);
+	// printf("creation_time = %d\n", creation_time);
+	// uint32_t modification_time = read32(pFile);
+	// printf("modification_time = %d\n", modification_time);
+	// uint32_t time_scale = read32(pFile);
+	// printf("time_scale = %d\n", time_scale);
+	// uint32_t duration = read32(pFile);
+	// printf("duration = %d\n", duration);
+	// uint32_t rate = read32(pFile);
+	// printf("rate = 0x%x\n", rate);
+	// uint32_t volume = read16(pFile);
+	// printf("volume = 0x%x\n", volume);
+
+	// skip(pFile, 10);
 
 	return 0;
 }
@@ -80,30 +105,7 @@ static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t size)
 // 	return 0;
 // }
 
-// static int parse_mvhd(Mp4File* mp4File, uint32_t start_pos, uint32_t mov_size)
-// {
-// 	// int version = read8(pFile);
-// 	// printf("version = %d\n", version);
-// 	// uint32_t flags = read24(pFile);
-// 	// printf("flags = %d\n", flags);
 
-// 	// uint32_t creation_time = read32(pFile);
-// 	// printf("creation_time = %d\n", creation_time);
-// 	// uint32_t modification_time = read32(pFile);
-// 	// printf("modification_time = %d\n", modification_time);
-// 	// uint32_t time_scale = read32(pFile);
-// 	// printf("time_scale = %d\n", time_scale);
-// 	// uint32_t duration = read32(pFile);
-// 	// printf("duration = %d\n", duration);
-// 	// uint32_t rate = read32(pFile);
-// 	// printf("rate = 0x%x\n", rate);
-// 	// uint32_t volume = read16(pFile);
-// 	// printf("volume = 0x%x\n", volume);
-
-// 	// skip(pFile, 10);
-
-// 	return 0;
-// }
 
 // static int parse_tkhd(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 // {
@@ -255,8 +257,8 @@ static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t size)
 static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('f','t','y','p'), parse_ftyp},
 	{MKTAG('m','o','o','v'), default_parse},
+	{MKTAG('m','v','h','d'), parse_mvhd},
 	// {MKTAG('m','o','o','f'), default_parse},
-	// {MKTAG('m','v','h','d'), parse_mvhd},
 	// {MKTAG('t','r','a','k'), default_parse},
 	// {MKTAG('t','k','h','d'), parse_tkhd},
 	// {MKTAG('e','d','t','s'), default_parse},
@@ -281,10 +283,7 @@ static BaseBox* read_box(uint32_t start_pos)
 	int b_large_size = 0;
 	uint32_t size = read32(pFile);
 	uint32_t type = read32(pFile);
-	BaseBox* new_box = malloc_box(type);
-	new_box->size = size;
-	new_box->type = type;
-
+	BaseBox* new_box = malloc_box(type, size);
 	if(size == 1)
 	{
 		uint64_t large_size = read64(pFile);

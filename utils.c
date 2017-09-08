@@ -89,18 +89,31 @@ void *mallocz(size_t size)
     return ptr;
 }
 
-BaseBox* malloc_box(uint32_t type)
+static void fill_box(BaseBox* box, uint32_t type, uint32_t size)
+{
+	box->type = type;
+	box->size = size;
+	box->name[0] = type>>24;
+	box->name[1] = (type>>16)&0x00ff;
+	box->name[2] = (type>>8)&0x0000ff;
+	box->name[3] = type&0x000000ff;
+	box->name[4] = 0;
+}
+
+BaseBox* malloc_box(uint32_t type, uint32_t size)
 {
 	BaseBox* box = NULL;
+	int malloc_size = sizeof(BaseBox);
 	for(int i=0;box_size_table[i].type != 0;i++)
 	{
 		if(box_size_table[i].type == type)
 		{
-			box = mallocz(box_size_table[i].size);
-			return box;
+			malloc_size = box_size_table[i].size;
+			break;
 		}
 	}
-	box = mallocz(sizeof(BaseBox));
+	box = mallocz(malloc_size);
+	fill_box(box, type, size);
 	return box;
 }
 

@@ -24,6 +24,6 @@ void print_fourcc(uint32_t fourcc);
 
 
 void *mallocz(size_t size);
-BaseBox* malloc_box(uint32_t type);
+BaseBox* malloc_box(uint32_t type, uint32_t size);
 
 #endif

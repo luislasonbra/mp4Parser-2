@@ -7,6 +7,7 @@ typedef struct BaseBox
 {
 	uint32_t size;
 	uint32_t type;
+	char name[5];
 	struct BaseBox* next;
 	struct BaseBox* child;
 }BaseBox;
@@ -16,7 +17,6 @@ typedef struct FullBox
 	BaseBox header;
 	uint8_t version;
 	uint32_t flags;
-	struct BaseBox* next;
 }FullBox;
 
 #define MAX_COMPATIBLE_BRANDS_COUNT 16
