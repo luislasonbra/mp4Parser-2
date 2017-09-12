@@ -107,39 +107,39 @@ static int parse_mvhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 
 
 
-// static int parse_tkhd(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
-// {
-// 	// int version = read_8();
-// 	// printf("version = %d\n", version);
-// 	// int flags = read_24();
-// 	// printf("flags = %d\n", flags);
+static int parse_tkhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	// int version = read_8();
+	// printf("version = %d\n", version);
+	// int flags = read_24();
+	// printf("flags = %d\n", flags);
 
-// 	// uint32_t creation_time = read32(pFile);
-// 	// printf("creation_time = %d\n", creation_time);
-// 	// uint32_t modification_time = read32(pFile);
-// 	// printf("modification_time = %d\n", modification_time);
-// 	// int track_id = read_32();
-// 	// printf("track_id = %d\n", track_id);
+	// uint32_t creation_time = read32(pFile);
+	// printf("creation_time = %d\n", creation_time);
+	// uint32_t modification_time = read32(pFile);
+	// printf("modification_time = %d\n", modification_time);
+	// int track_id = read_32();
+	// printf("track_id = %d\n", track_id);
 
-// 	// skip(pFile, 8);
+	// skip(pFile, 8);
 
-// 	// int layer = read_16();
-// 	// printf("layer = %d\n", layer);
-// 	// int alternate_group = read_16();
-// 	// printf("alternate_group = %d\n", alternate_group);
-// 	// int volume = read_16();
-// 	// printf("volume = 0x%x\n", volume);
+	// int layer = read_16();
+	// printf("layer = %d\n", layer);
+	// int alternate_group = read_16();
+	// printf("alternate_group = %d\n", alternate_group);
+	// int volume = read_16();
+	// printf("volume = 0x%x\n", volume);
 
-// 	// skip(pFile, 2);
-// 	// skip(pFile, 36);//matrix
+	// skip(pFile, 2);
+	// skip(pFile, 36);//matrix
 
-// 	// int width = read_32();
-// 	// printf("width = 0x%x\n", width);
-// 	// int height = read_32();
-// 	// printf("hight = 0x%x\n", height);
+	// int width = read_32();
+	// printf("width = 0x%x\n", width);
+	// int height = read_32();
+	// printf("hight = 0x%x\n", height);
 
-// 	return 0;
-// }
+	return 0;
+}
 
 // static int parse_elst(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 // {
@@ -259,8 +259,8 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('m','o','o','v'), default_parse},
 	{MKTAG('m','v','h','d'), parse_mvhd},
 	// {MKTAG('m','o','o','f'), default_parse},
-	// {MKTAG('t','r','a','k'), default_parse},
-	// {MKTAG('t','k','h','d'), parse_tkhd},
+	{MKTAG('t','r','a','k'), default_parse},
+	{MKTAG('t','k','h','d'), parse_tkhd},
 	// {MKTAG('e','d','t','s'), default_parse},
 	// {MKTAG('e','l','s','t'), parse_elst},
 	// {MKTAG('m','d','i','a'), default_parse},
