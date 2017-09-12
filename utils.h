@@ -19,8 +19,9 @@ int readn(FILE* fd, char* buf, int size);
 int skip(FILE* fd, int len);
 
 
-void print_box_type(uint32_t type);
-void print_fourcc(uint32_t fourcc);
+#define FOURCC_MAX_STRING_SIZE 32
+#define fourcc2str(fourcc) fourcc_make_string((char[FOURCC_MAX_STRING_SIZE]){0}, fourcc)
+char *fourcc_make_string(char *buf, uint32_t fourcc);
 
 
 void *mallocz(size_t size);
