@@ -12,13 +12,6 @@ typedef struct BaseBox
 	struct BaseBox* child;
 }BaseBox;
 
-typedef struct FullBox
-{
-	BaseBox header;
-	uint8_t version;
-	uint32_t flags;
-}FullBox;
-
 #define MAX_COMPATIBLE_BRANDS_COUNT 16
 typedef struct FileTypeBox
 {
@@ -28,6 +21,18 @@ typedef struct FileTypeBox
 	uint32_t compatible_brands[MAX_COMPATIBLE_BRANDS_COUNT];
 }FileTypeBox;
 
-
+typedef struct MovieHeaderBox
+{
+	BaseBox* header;
+	uint8_t version;
+	uint32_t flags;
+	uint64_t creation_time;
+	uint64_t modification_time;
+	uint32_t timescale;
+	uint64_t duration;
+	int32_t rate;
+	int16_t volume;
+	int32_t matrix[9];
+}MovieHeaderBox;
 
 #endif

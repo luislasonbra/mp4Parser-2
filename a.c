@@ -63,26 +63,30 @@ static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 
 static int parse_mvhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
-	// int version = read8(pFile);
-	// printf("version = %d\n", version);
-	// uint32_t flags = read24(pFile);
-	// printf("flags = %d\n", flags);
-
-	// uint32_t creation_time = read32(pFile);
-	// printf("creation_time = %d\n", creation_time);
-	// uint32_t modification_time = read32(pFile);
-	// printf("modification_time = %d\n", modification_time);
-	// uint32_t time_scale = read32(pFile);
-	// printf("time_scale = %d\n", time_scale);
-	// uint32_t duration = read32(pFile);
-	// printf("duration = %d\n", duration);
-	// uint32_t rate = read32(pFile);
-	// printf("rate = 0x%x\n", rate);
-	// uint32_t volume = read16(pFile);
-	// printf("volume = 0x%x\n", volume);
-
-	// skip(pFile, 10);
-
+	MovieHeaderBox* box = (MovieHeaderBox*)root;
+	box->version = read_8();
+	box->flags = read_24();
+	if(box->version == 1)
+	{
+		box->creation_time = read_64();
+		box->modification_time = read_64();
+		box->timescale = read_32();
+		box->duration = read_64();
+	}
+	else
+	{
+		box->creation_time = read_32();
+		box->modification_time = read_32();
+		box->timescale = read_32();
+		box->duration = read_32();	
+	}
+	box->rate = read_32();
+	box->volume = read_16();
+	skip_n(10);
+	for(int i=0;i<9;i++)
+	{
+		box->matrix[i] = read_32();
+	}
 	return 0;
 }
 

@@ -9,6 +9,7 @@ typedef struct BoxSizeTable
 static const BoxSizeTable box_size_table[] = 
 {
 	{MKTAG('f','t','y','p'), sizeof(FileTypeBox)},
+	{MKTAG('m','v','h','d'), sizeof(MovieHeaderBox)},
 	{0, 0}
 };
 
