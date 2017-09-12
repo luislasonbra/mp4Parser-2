@@ -10,6 +10,7 @@ static const BoxSizeTable box_size_table[] =
 {
 	{MKTAG('f','t','y','p'), sizeof(FileTypeBox)},
 	{MKTAG('m','v','h','d'), sizeof(MovieHeaderBox)},
+	{MKTAG('t','k','h','d'), sizeof(TrackHeaderBox)},
 	{0, 0}
 };
 

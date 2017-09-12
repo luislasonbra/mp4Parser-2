@@ -113,6 +113,7 @@ static int parse_mvhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 
 static int parse_tkhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
+	TrackHeaderBox* box = (TrackHeaderBox*)root;
 	// int version = read_8();
 	// printf("version = %d\n", version);
 	// int flags = read_24();

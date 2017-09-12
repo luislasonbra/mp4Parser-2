@@ -23,7 +23,7 @@ typedef struct FileTypeBox
 
 typedef struct MovieHeaderBox
 {
-	BaseBox* header;
+	BaseBox header;
 	uint8_t version;
 	uint32_t flags;
 	uint64_t creation_time;
@@ -34,5 +34,12 @@ typedef struct MovieHeaderBox
 	int16_t volume;
 	int32_t matrix[9];
 }MovieHeaderBox;
+
+typedef struct TrackHeaderBox
+{
+	BaseBox header;
+	uint8_t version;
+	uint32_t flags;
+}TrackHeaderBox;
 
 #endif
