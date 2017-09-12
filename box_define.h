@@ -40,6 +40,16 @@ typedef struct TrackHeaderBox
 	BaseBox header;
 	uint8_t version;
 	uint32_t flags;
+	uint64_t creation_time;
+	uint64_t modification_time;
+	uint32_t track_id;
+	uint64_t duration;
+	int16_t layer;
+	int16_t alternate_group;
+	int16_t volume;
+	int32_t matrix[9];
+	uint32_t width;
+	uint32_t height;
 }TrackHeaderBox;
 
 #endif

@@ -114,35 +114,36 @@ static int parse_mvhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 static int parse_tkhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	TrackHeaderBox* box = (TrackHeaderBox*)root;
-	// int version = read_8();
-	// printf("version = %d\n", version);
-	// int flags = read_24();
-	// printf("flags = %d\n", flags);
-
-	// uint32_t creation_time = read32(pFile);
-	// printf("creation_time = %d\n", creation_time);
-	// uint32_t modification_time = read32(pFile);
-	// printf("modification_time = %d\n", modification_time);
-	// int track_id = read_32();
-	// printf("track_id = %d\n", track_id);
-
-	// skip(pFile, 8);
-
-	// int layer = read_16();
-	// printf("layer = %d\n", layer);
-	// int alternate_group = read_16();
-	// printf("alternate_group = %d\n", alternate_group);
-	// int volume = read_16();
-	// printf("volume = 0x%x\n", volume);
-
-	// skip(pFile, 2);
-	// skip(pFile, 36);//matrix
-
-	// int width = read_32();
-	// printf("width = 0x%x\n", width);
-	// int height = read_32();
-	// printf("hight = 0x%x\n", height);
-
+	box->version = read_8();
+	box->flags = read_24();
+	if(box->version == 1)
+	{
+		box->creation_time = read_64();
+		box->modification_time = read_64();
+		box->track_id = read_32();
+		skip_n(4);
+		box->duration = read_64();
+	}
+	else
+	{
+		box->creation_time = read_32();
+		box->modification_time = read_32();
+		box->track_id = read_32();
+		skip_n(4);
+		box->duration = read_32();	
+	}
+	skip_n(8);
+	box->layer = read_16();
+	box->alternate_group = read_16();
+	box->volume = read_16();
+	skip_n(2);
+	for(int i=0;i<9;i++)
+	{
+		box->matrix[i] = read_32();
+	}
+	box->width = read_32()>>16;
+	box->height = read_32()>>16;
+	
 	return 0;
 }
 
