@@ -94,27 +94,6 @@ static int parse_mvhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	return 0;
 }
 
-// static int parse_meta(Mp4File* mp4File, uint32_t start_pos, uint32_t mov_size)
-// {
-// 	int index = 0;
-// 	while(mov_size > 8)
-// 	{
-// 		uint32_t tag = read32(pFile);
-// 		mov_size -= 4;
-// 		index += 4;
-// 		if(tag == MKTAG('h', 'd', 'l', 'r'))
-// 		{
-// 			fseek(pFile, -8, SEEK_CUR);
-// 			index -= 8;
-// 			mov_size += 8;
-// 			return default_parse(mp4File, start_pos+index, mov_size);
-// 		}
-// 	}
-// 	return 0;
-// }
-
-
-
 static int parse_tkhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	TrackHeaderBox* box = (TrackHeaderBox*)root;
@@ -210,23 +189,6 @@ static int parse_hdlr(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	}
 	return 0;
 }
-
-// static int parse_dref(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
-// {
-// 	int version = read_8();
-// 	uint32_t flags = read_24();
-	
-// 	uint32_t entry_count = read_32();
-// 	int index = 8;
-// 	for(int i=0;i<entry_count;i++)
-// 	{
-// 		int size = read_box(mp4File, start_pos+index);
-// 		index += size;
-// 		fseek(pFile, start_pos+index, SEEK_SET);
-
-// 	}
-// 	return 0;
-// }
 
 static int parse_stsd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
