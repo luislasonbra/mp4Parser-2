@@ -158,8 +158,6 @@ static int parse_tkhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	}
 	box->width = read_32()>>16;
 	box->height = read_32()>>16;
-	c->streams[c->stream_num-1].width = box->width;
-	c->streams[c->stream_num-1].height = box->height;
 	
 	return 0;
 }
@@ -226,6 +224,23 @@ static int parse_hdlr(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	return 0;
 }
 
+static BaseBox* read_video_entry(Context* c, uint32_t start_pos)
+{
+	uint32_t size = read32(pFile);
+	uint32_t type = read32(pFile);
+	BaseBox* box = malloc_box(type, size);
+	skip_n(6);
+	uint16_t date_reference_index = read_16();
+	skip_n(16);
+	uint16_t width = read_16();
+	uint16_t height = read_16();
+	printf("width = %d, height = %d\n", width, height);
+	c->streams[c->stream_num-1].width = width;
+	c->streams[c->stream_num-1].height = height;
+
+	return box;
+}
+
 static int parse_stsd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	int version = read_8();
@@ -235,7 +250,18 @@ static int parse_stsd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	int index = 8;
 	for(int i=0;i<entry_count;i++)
 	{
-		BaseBox* box = read_box(c, start_pos+index);
+		BaseBox* box = NULL;
+		if(c->streams[c->stream_num-1].type == MKTAG('v','i','d','e'))
+		{
+			box = read_video_entry(c, start_pos+index);
+		}
+		else
+		{
+			box = read_box(c, start_pos+index);
+		}
+		if(box == NULL)
+			return -1;
+
 		add_box(root, box);
 		index += box->size;
 		fseek(pFile, start_pos+index, SEEK_SET);
@@ -322,7 +348,7 @@ static void show_box(BaseBox* root, int depth)
 
 static void add_box(BaseBox* root, BaseBox* new_box)
 {
-	if(root == NULL)
+	if(root == NULL || new_box == NULL)
 		return;
 
 	if(root->child == NULL)
