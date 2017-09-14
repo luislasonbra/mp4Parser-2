@@ -6,11 +6,12 @@
 static char* file_name = "/Users/mayudong/Movies/1.mp4";
 static FILE* pFile = NULL;
 
-
-typedef struct Mp4File
+typedef struct Context
 {
 	BaseBox root;
-}Mp4File;
+	int width;
+	int height;
+}Context;
 
 
 #define read_8() read8(pFile)
@@ -21,22 +22,25 @@ typedef struct Mp4File
 #define skip_n(x) skip(pFile,x)
 #define read_n(buf, x) readn(pFile, buf, x)
 
-static BaseBox* read_box(uint32_t start_pos);
+static BaseBox* read_box(Context* c, uint32_t start_pos);
 static void add_box(BaseBox* root, BaseBox* new_box);
+
+
+typedef int (*BOX_PARSER)(Context* c, BaseBox* root, uint32_t start_pos, uint32_t size);
 
 typedef struct MOVParseTableEntry
 {
 	uint32_t type;
-	int (*parser)(BaseBox* root, uint32_t start_pos, uint32_t size);
+	BOX_PARSER parser;
 }MOVParseTableEntry;
 
 
-static int default_parse(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+static int default_parse(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	int index = 0;
 	while(index < mov_size)
 	{
-		BaseBox* box = read_box(start_pos+index);
+		BaseBox* box = read_box(c, start_pos+index);
 		add_box(root, box);
 		index += box->size;
 		fseek(pFile, start_pos+index, SEEK_SET);
@@ -44,7 +48,7 @@ static int default_parse(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 	return 0;
 }
 
-static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+static int parse_ftyp(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	if(root == NULL)
 		return 0;
@@ -61,7 +65,7 @@ static int parse_ftyp(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 	return 0;
 }
 
-static int parse_mvhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+static int parse_mvhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	MovieHeaderBox* box = (MovieHeaderBox*)root;
 	box->version = read_8();
@@ -111,7 +115,7 @@ static int parse_mvhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 
 
 
-static int parse_tkhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+static int parse_tkhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	TrackHeaderBox* box = (TrackHeaderBox*)root;
 	box->version = read_8();
@@ -147,7 +151,7 @@ static int parse_tkhd(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 	return 0;
 }
 
-static int parse_elst(BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+static int parse_elst(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	// int version = read_8();
 	// printf("version = %d\n", version);
@@ -284,7 +288,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 };
 
 
-static BaseBox* read_box(uint32_t start_pos)
+static BaseBox* read_box(Context* c, uint32_t start_pos)
 {
 	int b_large_size = 0;
 	uint32_t size = read32(pFile);
@@ -296,7 +300,7 @@ static BaseBox* read_box(uint32_t start_pos)
 		b_large_size = 1;
 	}
 
-	int (*parser)(BaseBox*, uint32_t,uint32_t) = NULL;
+	BOX_PARSER parser = NULL;
 	for(int i=0;mov_default_parse_table[i].type != 0;i++)
 	{
 		if(mov_default_parse_table[i].type == type)
@@ -307,7 +311,7 @@ static BaseBox* read_box(uint32_t start_pos)
 	}
 	if(parser)
 	{
-		parser(new_box, start_pos+8, size-8);
+		parser(c, new_box, start_pos+8, size-8);
 	}
 
 	return new_box;
@@ -364,7 +368,7 @@ int main(int argc, char** argv)
 		file_name = argv[1];
 	}
 
-	Mp4File* mp4File = (Mp4File*)mallocz(sizeof(Mp4File));
+	Context* c = (Context*)mallocz(sizeof(Context));
 
 	uint32_t cur_pos = 0;
 	pFile = fopen(file_name, "rb");
@@ -377,10 +381,10 @@ int main(int argc, char** argv)
 	int file_size = ftell(pFile);
 	fseek(pFile, 0, SEEK_SET);
 
-	BaseBox* root_box = &mp4File->root;
+	BaseBox* root_box = &c->root;
 	while(cur_pos < file_size)
 	{
-		BaseBox* box = read_box(cur_pos);
+		BaseBox* box = read_box(c, cur_pos);
 		add_box(root_box, box);
 		cur_pos += box->size;
 		fseek(pFile, cur_pos, SEEK_SET);
@@ -389,8 +393,8 @@ int main(int argc, char** argv)
 	fclose(pFile);
 	pFile = NULL;
 
-	show_box(&mp4File->root, -1);
+	show_box(&c->root, -1);
 
-	free(mp4File);
+	free(c);
 	return 0;
 }
