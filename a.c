@@ -6,11 +6,22 @@
 static char* file_name = "/Users/mayudong/Movies/1.mp4";
 static FILE* pFile = NULL;
 
+#define MAX_STREAM_COUNT 10
+
+typedef struct Stream
+{
+	int index;
+	uint32_t type;
+	int width;
+	int height;
+	char language[4];
+}Stream;
+
 typedef struct Context
 {
 	BaseBox root;
-	int width;
-	int height;
+	int stream_num;
+	Stream streams[MAX_STREAM_COUNT];
 }Context;
 
 
@@ -94,6 +105,27 @@ static int parse_mvhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	return 0;
 }
 
+static int parse_trak(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	if(c->stream_num >= MAX_STREAM_COUNT)
+	{
+		return -1;
+	}
+
+	c->streams[c->stream_num].index = c->stream_num;
+	c->stream_num++;
+
+	int index = 0;
+	while(index < mov_size)
+	{
+		BaseBox* box = read_box(c, start_pos+index);
+		add_box(root, box);
+		index += box->size;
+		fseek(pFile, start_pos+index, SEEK_SET);
+	}
+	return 0;
+}
+
 static int parse_tkhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	TrackHeaderBox* box = (TrackHeaderBox*)root;
@@ -126,6 +158,8 @@ static int parse_tkhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	}
 	box->width = read_32()>>16;
 	box->height = read_32()>>16;
+	c->streams[c->stream_num-1].width = box->width;
+	c->streams[c->stream_num-1].height = box->height;
 	
 	return 0;
 }
@@ -167,6 +201,7 @@ static int parse_mdhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	}
 	uint16_t language = read_16();
 	make_language_iso639(language, box->language);
+	strcpy(c->streams[c->stream_num-1].language, box->language);
 	return 0;
 }
 
@@ -177,6 +212,7 @@ static int parse_hdlr(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	box->flags = read_24();
 	read_32();
 	box->handler_type = read_32();
+	c->streams[c->stream_num-1].type = box->handler_type;
 	skip_n(12);
 
 	int name_len = mov_size-20;
@@ -212,7 +248,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('m','o','o','v'), default_parse},
 	{MKTAG('m','v','h','d'), parse_mvhd},
 	// {MKTAG('m','o','o','f'), default_parse},
-	{MKTAG('t','r','a','k'), default_parse},
+	{MKTAG('t','r','a','k'), parse_trak},
 	{MKTAG('t','k','h','d'), parse_tkhd},
 	{MKTAG('e','d','t','s'), default_parse},
 	{MKTAG('e','l','s','t'), parse_elst},
@@ -337,6 +373,15 @@ int main(int argc, char** argv)
 	pFile = NULL;
 
 	show_box(&c->root, -1);
+
+	for(int i=0;i<c->stream_num;i++)
+	{
+		printf("index = %d\n", c->streams[i].index);
+		printf("type = %s\n", fourcc2str(c->streams[i].type));
+		printf("width = %d, height = %d\n", c->streams[i].width, c->streams[i].height);
+		printf("language = %s\n", c->streams[i].language);
+		printf("--------\n");
+	}
 
 	free(c);
 	return 0;
