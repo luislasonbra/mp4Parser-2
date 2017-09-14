@@ -191,30 +191,25 @@ static int parse_mdhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	return 0;
 }
 
-// static int parse_hdlr(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
-// {
-// 	// int version = read_8();
-// 	// printf("version = %d\n", version);
-// 	// uint32_t flags = read_24();
-// 	// printf("flags = %d\n", flags);
+static int parse_hdlr(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	HandlerBox* box = (HandlerBox*)root;
+	box->version = read_8();
+	box->flags = read_24();
+	read_32();
+	box->handler_type = read_32();
+	skip_n(12);
 
-// 	// uint32_t pre_define = read_32();
-// 	// uint32_t handle_type = read_32();
-// 	// print_fourcc(handle_type);
-// 	// skip_n(12);
-
-// 	// int name_size = size-20;
-// 	// if(name_size > 0)
-// 	// {
-// 	// 	char* name = (char*)malloc(name_size+1);
-// 	// 	memset(name, 0, name_size+1);
-// 	// 	read_n(name, name_size);
-// 	// 	printf("hdlr name = %s\n", name);
-// 	// 	free(name);	
-// 	// }
-	
-// 	return 0;
-// }
+	int name_len = mov_size-20;
+	if(name_len > 0)
+	{
+		char* name = (char*)malloc(name_len+1);
+		memset(name, 0, name_len+1);
+		read_n(name, name_len);
+		box->name = name;
+	}
+	return 0;
+}
 
 // static int parse_dref(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 // {
@@ -261,7 +256,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('e','l','s','t'), parse_elst},
 	{MKTAG('m','d','i','a'), default_parse},
 	{MKTAG('m','d','h','d'), parse_mdhd},
-	// {MKTAG('h','d','l','r'), parse_hdlr},
+	{MKTAG('h','d','l','r'), parse_hdlr},
 	// {MKTAG('m','i','n','f'), default_parse},
 	// {MKTAG('d','i','n','f'), default_parse},
 	// {MKTAG('d','r','e','f'), parse_dref},

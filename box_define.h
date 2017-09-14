@@ -64,4 +64,13 @@ typedef struct MediaHeaderBox
 	char language[4];
 }MediaHeaderBox;
 
+typedef struct HandlerBox
+{
+	BaseBox header;
+	uint8_t version;
+	uint32_t flags;
+	uint32_t handler_type;
+	char* name;
+}HandlerBox;
+
 #endif
