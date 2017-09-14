@@ -376,11 +376,11 @@ int main(int argc, char** argv)
 
 	for(int i=0;i<c->stream_num;i++)
 	{
+		printf("--------------------------------\n");
 		printf("index = %d\n", c->streams[i].index);
 		printf("type = %s\n", fourcc2str(c->streams[i].type));
 		printf("width = %d, height = %d\n", c->streams[i].width, c->streams[i].height);
 		printf("language = %s\n", c->streams[i].language);
-		printf("--------\n");
 	}
 
 	free(c);
