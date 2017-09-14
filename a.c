@@ -153,57 +153,43 @@ static int parse_tkhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 
 static int parse_elst(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
-	// int version = read_8();
-	// printf("version = %d\n", version);
-	// int flags = read_24();
-	// printf("flags = %d\n", flags);
-
-	// int entry_count = read_32();
-	// printf("entry_count = %d\n", entry_count);
-	// for(int i=0;i<entry_count;i++)
-	// {
-	// 	if(version == 1)
-	// 	{
-	// 		uint64_t segment_duration = read_64();
-	// 		printf("%d:segment_duration = %lld\n", i, segment_duration);
-	// 		uint64_t media_time = read_64();
-	// 		printf("%d:media_time = %lld\n", i, media_time);
-	// 	}
-	// 	else
-	// 	{
-	// 		uint32_t segment_duration = read_32();
-	// 		printf("%d:segment_duration = %d", i, segment_duration);
-	// 		int media_time = read_32();
-	// 		printf("%d:media_time = %d\n", i, media_time);
-	// 	}
-	// 	int media_rate_interge = read_16();
-	// 	int media_rate_fraction = read_16();
-	// 	printf("media_rate = %d.%d\n", media_rate_interge, media_rate_fraction);
-	// }
-
 	return 0;
 }
 
-// static int parse_mdhd(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
-// {
-// 	// int version = read_8();
-// 	// printf("version = %d\n", version);
-// 	// uint32_t flags = read_24();
-// 	// printf("flags = %d\n", flags);
 
-// 	// uint32_t creation_time = read_32();
-// 	// printf("creation_time = %d\n", creation_time);
-// 	// uint32_t modification_time = read_32();
-// 	// printf("modification_time = %d\n", modification_time);
-// 	// uint32_t time_scale = read_32();
-// 	// printf("time_scale = %d\n", time_scale);
-// 	// uint32_t duration = read_32();
-// 	// printf("duration = %d\n", duration);
+static void make_language_iso639(uint16_t lang, char language[4])
+{
+	language[3] = 0;
+	language[2] = (lang & 0x001f) + 0x60;
+	lang >>= 5;
+	language[1] = (lang & 0x001f) + 0x60;
+	lang >>= 5;
+	language[0] = (lang & 0x001f) + 0x60;
+}
 
-// 	// int language = read_16();
-// 	// printf("language = %x\n", language);//todo
-// 	return 0;
-// }
+static int parse_mdhd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	MediaHeaderBox* box = (MediaHeaderBox*)root;
+	box->version = read_8();
+	box->flags = read_24();
+	if(box->version == 1)
+	{
+		box->creation_time = read_64();
+		box->modification_time = read_64();
+		box->timescale = read_32();
+		box->duration = read_64();
+	}
+	else
+	{
+		box->creation_time = read_32();
+		box->modification_time = read_32();
+		box->timescale = read_32();
+		box->duration = read_32();	
+	}
+	uint16_t language = read_16();
+	make_language_iso639(language, box->language);
+	return 0;
+}
 
 // static int parse_hdlr(Mp4File* mp4File, uint32_t start_pos, uint32_t size)
 // {
@@ -273,8 +259,8 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('t','k','h','d'), parse_tkhd},
 	{MKTAG('e','d','t','s'), default_parse},
 	{MKTAG('e','l','s','t'), parse_elst},
-	// {MKTAG('m','d','i','a'), default_parse},
-	// {MKTAG('m','d','h','d'), parse_mdhd},
+	{MKTAG('m','d','i','a'), default_parse},
+	{MKTAG('m','d','h','d'), parse_mdhd},
 	// {MKTAG('h','d','l','r'), parse_hdlr},
 	// {MKTAG('m','i','n','f'), default_parse},
 	// {MKTAG('d','i','n','f'), default_parse},

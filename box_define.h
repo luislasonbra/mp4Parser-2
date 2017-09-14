@@ -52,4 +52,16 @@ typedef struct TrackHeaderBox
 	uint32_t height;
 }TrackHeaderBox;
 
+typedef struct MediaHeaderBox
+{
+	BaseBox header;
+	uint8_t version;
+	uint32_t flags;
+	uint64_t creation_time;
+	uint64_t modification_time;
+	uint32_t timescale;
+	uint64_t duration;
+	char language[4];
+}MediaHeaderBox;
+
 #endif
