@@ -73,4 +73,11 @@ typedef struct HandlerBox
 	char* name;
 }HandlerBox;
 
+
+typedef struct SttsEntry
+{
+	uint32_t sample_count;
+	uint32_t sample_delta;
+}SttsEntry;
+
 #endif

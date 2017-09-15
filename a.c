@@ -18,6 +18,9 @@ typedef struct Stream
 	int sample_size;
 	int sample_rate;
 	char language[4];
+
+	int stts_count;
+	SttsEntry* stts_data;
 }Stream;
 
 typedef struct Context
@@ -318,6 +321,23 @@ static int parse_stsd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	return 0;
 }
 
+static int parse_stts(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	Stream* stream = &c->streams[c->stream_num-1];
+	int version = read_8();
+	uint32_t flags = read_24();
+	stream->stts_count = read_32();
+	if(stream->stts_count <= 0)
+		return -1;
+	stream->stts_data = (SttsEntry*)mallocz(sizeof(SttsEntry)*stream->stts_count);
+	for(int i=0;i<stream->stts_count;i++)
+	{
+		stream->stts_data[i].sample_count = read_32();
+		stream->stts_data[i].sample_delta = read_32();
+	}
+	return 0;
+}
+
 static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('f','t','y','p'), parse_ftyp},
 	{MKTAG('m','o','o','v'), default_parse},
@@ -335,6 +355,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	// {MKTAG('d','r','e','f'), parse_dref},
 	{MKTAG('s','t','b','l'), default_parse},
 	{MKTAG('s','t','s','d'), parse_stsd},
+	{MKTAG('s','t','t','s'), parse_stts},
 	// {MKTAG('m','v','e','x'), default_parse},
 	// {MKTAG('u','d','t','a'), default_parse},
 	// {MKTAG('m','e','t','a'), parse_meta},
@@ -451,14 +472,18 @@ int main(int argc, char** argv)
 
 	for(int i=0;i<c->stream_num;i++)
 	{
+		Stream* s = &c->streams[i];
 		printf("--------------------------------\n");
-		printf("index = %d\n", c->streams[i].index);
-		printf("type = %s\n", fourcc2str(c->streams[i].type));
-		printf("width = %d, height = %d\n", c->streams[i].width, c->streams[i].height);
+		printf("index = %d\n", s->index);
+		printf("type = %s\n", fourcc2str(s->type));
+		printf("width = %d, height = %d\n", s->width, s->height);
 		printf("channel_count = %d, sample_size = %d, sample_rate = %d\n", 
-			c->streams[i].channel_count, 
-			c->streams[i].sample_size, 
-			c->streams[i].sample_rate);
+			s->channel_count, s->sample_size, s->sample_rate);
+		printf("stts:%d\n", s->stts_count);
+		for(int j=0;j<s->stts_count;j++)
+		{
+			printf("    count = %d, delta = %d\n", s->stts_data[j].sample_count, s->stts_data[i].sample_delta);
+		}
 		printf("language = %s\n", c->streams[i].language);
 	}
 
