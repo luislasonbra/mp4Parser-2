@@ -27,6 +27,10 @@ typedef struct Stream
 
 	int stsc_count;
 	StscEntry* stsc_data;
+
+	int stsz_sample_size;
+	int sample_count;
+	uint32_t* sample_sizes;
 }Stream;
 
 typedef struct Context
@@ -357,7 +361,6 @@ static int parse_stss(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	for(int i=0;i<s->stss_count;i++)
 	{
 		s->stss_data[i].sample_number = read_32();
-		printf("sample_number = %d\n", s->stss_data[i].sample_number);
 	}
 	return 0;
 }
@@ -377,6 +380,25 @@ static int parse_stsc(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 		s->stsc_data[i].first_chunk = read_32();
 		s->stsc_data[i].samples_per_chunk = read_32();
 		s->stsc_data[i].sample_description_index = read_32();
+	}
+	return 0;
+}
+
+static int parse_stsz(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	Stream* s = &c->streams[c->stream_num-1];
+	int version = read_8();
+	uint32_t flags = read_24();
+
+	s->stsz_sample_size = read_32();
+	s->sample_count = read_32();
+	if(s->stsz_sample_size == 0)
+	{
+		s->sample_sizes = malloc(s->sample_count*sizeof(uint32_t));
+		for(int i=0;i<s->sample_count;i++)
+		{
+			s->sample_sizes[i] = read_32();
+		}
 	}
 	return 0;
 }
@@ -427,6 +449,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('s','t','s','s'), parse_stss},
 	{MKTAG('c','t','t','s'), parse_ctts},
 	{MKTAG('s','t','s','c'), parse_stsc},
+	{MKTAG('s','t','s','z'), parse_stsz},
 	// {MKTAG('m','v','e','x'), default_parse},
 	// {MKTAG('u','d','t','a'), default_parse},
 	// {MKTAG('m','e','t','a'), parse_meta},
@@ -558,10 +581,10 @@ int main(int argc, char** argv)
 				s->stts_data[j].sample_delta);
 		}
 		printf("stss:%d\n", s->stss_count);
-		for(int j=0;j<s->stss_count;j++)
-		{
-			printf("    sync sample = %d\n", s->stss_data[j].sample_number);
-		}
+		// for(int j=0;j<s->stss_count;j++)
+		// {
+		// 	printf("    sync sample = %d\n", s->stss_data[j].sample_number);
+		// }
 		printf("stsc:%d\n", s->stsc_count);
 		// for(int j=0;j<s->stsc_count;j++)
 		// {
@@ -569,6 +592,7 @@ int main(int argc, char** argv)
 		// 		s->stsc_data[j].first_chunk, 
 		// 		s->stsc_data[j].samples_per_chunk);
 		// }
+		printf("sample count = %d\n", s->sample_count);
 		printf("language = %s\n", c->streams[i].language);
 	}
 
