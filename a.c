@@ -14,6 +14,9 @@ typedef struct Stream
 	uint32_t type;
 	int width;
 	int height;
+	int channel_count;
+	int sample_size;
+	int sample_rate;
 	char language[4];
 }Stream;
 
@@ -226,6 +229,7 @@ static int parse_hdlr(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 
 static BaseBox* read_video_entry(Context* c, uint32_t start_pos)
 {
+	char codec_name[32] = {0};
 	uint32_t size = read32(pFile);
 	uint32_t type = read32(pFile);
 	BaseBox* box = malloc_box(type, size);
@@ -234,9 +238,50 @@ static BaseBox* read_video_entry(Context* c, uint32_t start_pos)
 	skip_n(16);
 	uint16_t width = read_16();
 	uint16_t height = read_16();
-	printf("width = %d, height = %d\n", width, height);
 	c->streams[c->stream_num-1].width = width;
 	c->streams[c->stream_num-1].height = height;
+
+	read_32(); //horizresolution
+	read_32(); //vertresolution
+	read_32(); //reserved
+	read_16(); //frame_count
+
+	uint8_t len = read_8();
+	if(len > 31)
+		len = 31;
+	read_n(codec_name, len);
+	skip_n(31-len);
+
+	uint16_t depth = read_16();
+
+	read_16();
+
+	BaseBox* sub_box = read_box(c, start_pos+86);
+	add_box(box, sub_box);
+
+	return box;
+}
+
+static BaseBox* read_audio_entry(Context* c, uint32_t start_pos)
+{
+	char codec_name[32] = {0};
+	uint32_t size = read32(pFile);
+	uint32_t type = read32(pFile);
+	BaseBox* box = malloc_box(type, size);
+	skip_n(6);
+	uint16_t date_reference_index = read_16();
+	
+	skip_n(8);
+
+	c->streams[c->stream_num-1].channel_count = read_16();
+	c->streams[c->stream_num-1].sample_size = read_16();
+
+	read_16();
+	read_16();
+	c->streams[c->stream_num-1].sample_rate = read_32()>>16;
+
+	BaseBox* sub_box = read_box(c, start_pos+86);
+	add_box(box, sub_box);
 
 	return box;
 }
@@ -254,6 +299,10 @@ static int parse_stsd(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 		if(c->streams[c->stream_num-1].type == MKTAG('v','i','d','e'))
 		{
 			box = read_video_entry(c, start_pos+index);
+		}
+		else if(c->streams[c->stream_num-1].type == MKTAG('s','o','u','n'))
+		{
+			box = read_audio_entry(c, start_pos+index);	
 		}
 		else
 		{
@@ -406,6 +455,10 @@ int main(int argc, char** argv)
 		printf("index = %d\n", c->streams[i].index);
 		printf("type = %s\n", fourcc2str(c->streams[i].type));
 		printf("width = %d, height = %d\n", c->streams[i].width, c->streams[i].height);
+		printf("channel_count = %d, sample_size = %d, sample_rate = %d\n", 
+			c->streams[i].channel_count, 
+			c->streams[i].sample_size, 
+			c->streams[i].sample_rate);
 		printf("language = %s\n", c->streams[i].language);
 	}
 
