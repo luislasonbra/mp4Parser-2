@@ -31,6 +31,9 @@ typedef struct Stream
 	int stsz_sample_size;
 	int sample_count;
 	uint32_t* sample_sizes;
+
+	int chunk_offset_count;
+	uint32_t* chunk_offsets;
 }Stream;
 
 typedef struct Context
@@ -403,6 +406,21 @@ static int parse_stsz(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	return 0;
 }
 
+static int parse_stco(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	Stream* s = &c->streams[c->stream_num-1];
+	int version = read_8();
+	uint32_t flags = read_24();
+
+	s->chunk_offset_count = read_32();
+	s->chunk_offsets = mallocz(s->chunk_offset_count*sizeof(uint32_t));
+	for(int i=0;i<s->chunk_offset_count;i++)
+	{
+		s->chunk_offsets[i] = read_32();
+	}
+	return 0;
+}
+
 static int parse_ctts(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
 {
 	int version = read_8();
@@ -450,6 +468,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('c','t','t','s'), parse_ctts},
 	{MKTAG('s','t','s','c'), parse_stsc},
 	{MKTAG('s','t','s','z'), parse_stsz},
+	{MKTAG('s','t','c','o'), parse_stco},
 	// {MKTAG('m','v','e','x'), default_parse},
 	// {MKTAG('u','d','t','a'), default_parse},
 	// {MKTAG('m','e','t','a'), parse_meta},
@@ -593,6 +612,11 @@ int main(int argc, char** argv)
 		// 		s->stsc_data[j].samples_per_chunk);
 		// }
 		printf("sample count = %d\n", s->sample_count);
+		printf("chunk off set: %d\n", s->chunk_offset_count);
+		// for(int j=0;j<s->chunk_offset_count;j++)
+		// {
+		// 	printf("    %d\n", s->chunk_offsets[j]);
+		// }
 		printf("language = %s\n", c->streams[i].language);
 	}
 
