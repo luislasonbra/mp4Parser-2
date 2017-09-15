@@ -80,4 +80,16 @@ typedef struct SttsEntry
 	uint32_t sample_delta;
 }SttsEntry;
 
+typedef struct StssEntry
+{
+	uint32_t sample_number;
+}StssEntry;
+
+typedef struct StscEntry
+{
+	uint32_t first_chunk;
+	uint32_t samples_per_chunk;
+	uint32_t sample_description_index;	
+}StscEntry;
+
 #endif

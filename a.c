@@ -21,6 +21,12 @@ typedef struct Stream
 
 	int stts_count;
 	SttsEntry* stts_data;
+
+	int stss_count;
+	StssEntry* stss_data;
+
+	int stsc_count;
+	StscEntry* stsc_data;
 }Stream;
 
 typedef struct Context
@@ -338,6 +344,68 @@ static int parse_stts(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mo
 	return 0;
 }
 
+static int parse_stss(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	Stream* s = &c->streams[c->stream_num-1];
+	int version = read_8();
+	uint32_t flags = read_24();
+
+	s->stss_count = read_32();
+	if(s->stss_count <= 0)
+		return -1;
+	s->stss_data = mallocz(s->stss_count*sizeof(StssEntry));
+	for(int i=0;i<s->stss_count;i++)
+	{
+		s->stss_data[i].sample_number = read_32();
+		printf("sample_number = %d\n", s->stss_data[i].sample_number);
+	}
+	return 0;
+}
+
+static int parse_stsc(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	Stream* s = &c->streams[c->stream_num-1];
+	int version = read_8();
+	uint32_t flags = read_24();
+
+	s->stsc_count = read_32();
+	if(s->stsc_count <= 0)
+		return -1;
+	s->stsc_data = mallocz(s->stsc_count*sizeof(StscEntry));
+	for(int i=0;i<s->stsc_count;i++)
+	{
+		s->stsc_data[i].first_chunk = read_32();
+		s->stsc_data[i].samples_per_chunk = read_32();
+		s->stsc_data[i].sample_description_index = read_32();
+	}
+	return 0;
+}
+
+static int parse_ctts(Context* c, BaseBox* root, uint32_t start_pos, uint32_t mov_size)
+{
+	int version = read_8();
+	uint32_t flags = read_24();
+	int entry_count = read_32();
+	if(version == 0)
+	{
+		for(int i=0;i<entry_count;i++)
+		{
+			uint32_t sample_count = read_32();
+			uint32_t sample_offset = read_32();
+		}		
+	}
+	else if(version == 1)
+	{
+		for(int i=0;i<entry_count;i++)
+		{
+			uint32_t sample_count = read_32();
+			int32_t sample_offset = read_32();
+		}		
+	}
+	
+	return 0;
+}
+
 static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('f','t','y','p'), parse_ftyp},
 	{MKTAG('m','o','o','v'), default_parse},
@@ -356,6 +424,9 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 	{MKTAG('s','t','b','l'), default_parse},
 	{MKTAG('s','t','s','d'), parse_stsd},
 	{MKTAG('s','t','t','s'), parse_stts},
+	{MKTAG('s','t','s','s'), parse_stss},
+	{MKTAG('c','t','t','s'), parse_ctts},
+	{MKTAG('s','t','s','c'), parse_stsc},
 	// {MKTAG('m','v','e','x'), default_parse},
 	// {MKTAG('u','d','t','a'), default_parse},
 	// {MKTAG('m','e','t','a'), parse_meta},
@@ -482,8 +553,22 @@ int main(int argc, char** argv)
 		printf("stts:%d\n", s->stts_count);
 		for(int j=0;j<s->stts_count;j++)
 		{
-			printf("    count = %d, delta = %d\n", s->stts_data[j].sample_count, s->stts_data[i].sample_delta);
+			printf("    count = %d, delta = %d\n", 
+				s->stts_data[j].sample_count, 
+				s->stts_data[j].sample_delta);
 		}
+		printf("stss:%d\n", s->stss_count);
+		for(int j=0;j<s->stss_count;j++)
+		{
+			printf("    sync sample = %d\n", s->stss_data[j].sample_number);
+		}
+		printf("stsc:%d\n", s->stsc_count);
+		// for(int j=0;j<s->stsc_count;j++)
+		// {
+		// 	printf("    first_chunk = %d, samples_per_chunk = %d\n", 
+		// 		s->stsc_data[j].first_chunk, 
+		// 		s->stsc_data[j].samples_per_chunk);
+		// }
 		printf("language = %s\n", c->streams[i].language);
 	}
 
